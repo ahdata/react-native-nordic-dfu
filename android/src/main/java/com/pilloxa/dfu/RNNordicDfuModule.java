@@ -8,15 +8,15 @@ import android.os.Handler;
 import androidx.annotation.Nullable;
 import android.util.Log;
 import com.facebook.react.bridge.*;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter;
+
 import no.nordicsemi.android.dfu.*;
 
 public class RNNordicDfuModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
 
     private final String dfuStateEvent = "DFUStateChanged";
     private final String progressEvent = "DFUProgress";
-    private static final String name = "RNNordicDfu";
+    public static final String name = "RNNordicDfu";
     public static final String LOG_TAG = name;
     private final ReactApplicationContext reactContext;
     private Promise mPromise = null;
@@ -96,18 +96,27 @@ public class RNNordicDfuModule extends ReactContextBaseJavaModule implements Lif
 
     @Override
     public void onHostResume() {
-        DfuServiceListenerHelper.registerProgressListener(this.reactContext, mDfuProgressListener);
-
+        try {
+            ReactApplicationContext currentReactContext = getReactApplicationContext();
+            if (currentReactContext != null) {
+                DfuServiceListenerHelper.registerProgressListener(currentReactContext, mDfuProgressListener);
+            }
+        }catch (Exception e){
+            Log.e(LOG_TAG, "threw when calling onHostResume. " + e.getMessage());
+        }
     }
 
     @Override
     public void onHostPause() {
+        // No action needed for RN 0.83 compatibility
     }
 
     @Override
     public void onHostDestroy() {
-        DfuServiceListenerHelper.unregisterProgressListener(this.reactContext, mDfuProgressListener);
-
+        ReactApplicationContext currentReactContext = getReactApplicationContext();
+        if (currentReactContext != null) {
+            DfuServiceListenerHelper.unregisterProgressListener(currentReactContext, mDfuProgressListener);
+        }
     }
 
 
